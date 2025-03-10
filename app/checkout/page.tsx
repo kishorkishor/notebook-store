@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useCartStore } from "@/lib/store/cart-store"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
@@ -13,6 +13,7 @@ import { Loader2 } from "lucide-react"
 
 export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const [isClient, setIsClient] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -34,8 +35,20 @@ export default function CheckoutPage() {
   const shipping = subtotal > 2000 ? 0 : 120
   const total = subtotal + shipping
 
+  // Ensure this code only runs on the client side
+  useEffect(() => {
+    setIsClient(true)
+    if (items.length === 0) {
+      router.push("/cart")
+    }
+  }, [items.length, router])
+
+  // If not client-side yet or cart is empty, don't render
+  if (!isClient) {
+    return null
+  }
+
   if (items.length === 0) {
-    router.push("/cart")
     return null
   }
 
