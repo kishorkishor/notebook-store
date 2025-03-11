@@ -1,4 +1,5 @@
 import "next-auth"
+import { JWT } from "next-auth/jwt"
 import type { DefaultSession } from "next-auth"
 
 declare module "next-auth" {
@@ -20,5 +21,13 @@ declare module "next-auth" {
   interface User {
     /** Determines if the user has admin access. */
     isAdmin: boolean
+  }
+}
+
+declare module "next-auth/jwt" {
+  /** Extend the built-in JWT types */
+  interface JWT {
+    /** Determines if the user has admin access. */
+    isAdmin?: boolean
   }
 }
