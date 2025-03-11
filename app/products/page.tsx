@@ -1,25 +1,60 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { products, categories } from "@/lib/data"
 import ProductCard from "@/components/products/product-card"
-import { Metadata } from "next"
+import { FilterDropdown } from "@/components/products/filter-dropdown"
+import { Product } from "@/types"
 
-export const metadata: Metadata = {
-  title: "Notebooks & Journals | Modern Notebook Store",
-  description: "Browse our collection of premium notebooks, journals, planners and sketchbooks.",
-}
+export default function ProductsPage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  
+  const categoryParam = searchParams.get("category") || 'all'
+  const sortParam = searchParams.get("sort") || "newest"
+  
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  
+  // Get the category name for display
+  const categoryName = categories.find(c => c.id === categoryParam)?.name || 'All Notebooks'
 
-export default function ProductsPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined }
-}) {
-  const categoryParam = searchParams.category as string | undefined
-  
-  const filteredProducts = categoryParam && categoryParam !== 'all'
-    ? products.filter(product => product.category === categoryParam)
-    : products
-  
-  const currentCategory = categoryParam || 'all'
-  const categoryName = categories.find(c => c.id === currentCategory)?.name || 'All Notebooks'
+  // Handle sort change
+  const handleSortChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("sort", value)
+    router.push(`/products?${params.toString()}`)
+  }
+
+  // Filter and sort products whenever params change
+  useEffect(() => {
+    // Filter by category
+    let result = categoryParam === 'all' 
+      ? [...products] 
+      : products.filter(product => product.category === categoryParam)
+    
+    // Sort products
+    switch(sortParam) {
+      case "price_asc":
+        result.sort((a, b) => a.price - b.price)
+        break
+      case "price_desc":
+        result.sort((a, b) => b.price - a.price)
+        break
+      case "name_asc":
+        result.sort((a, b) => a.name.localeCompare(b.name))
+        break
+      case "name_desc":
+        result.sort((a, b) => b.name.localeCompare(a.name))
+        break
+      case "newest":
+      default:
+        result.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        break
+    }
+    
+    setFilteredProducts(result)
+  }, [categoryParam, sortParam])
 
   return (
     <div className="container py-10">
@@ -30,20 +65,28 @@ export default function ProductsPage({
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-8 justify-center">
-        {categories.map((category) => (
-          <a
-            key={category.id}
-            href={category.id === 'all' ? '/products' : `/products?category=${category.id}`}
-            className={`px-4 py-2 rounded-md text-sm ${
-              currentCategory === category.id
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-secondary hover:bg-secondary/80'
-            }`}
-          >
-            {category.name}
-          </a>
-        ))}
+      {/* Filter and Sort UI */}
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-wrap gap-2">
+          {categories.map((category) => (
+            <a
+              key={category.id}
+              href={category.id === 'all' ? '/products' : `/products?category=${category.id}`}
+              className={`px-4 py-2 rounded-md text-sm ${
+                categoryParam === category.id
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary hover:bg-secondary/80'
+              }`}
+            >
+              {category.name}
+            </a>
+          ))}
+        </div>
+        
+        <FilterDropdown 
+          onSortChange={handleSortChange} 
+          currentSort={sortParam}
+        />
       </div>
 
       {filteredProducts.length > 0 ? (
