@@ -2,8 +2,7 @@
 const nextConfig = {
   output: 'standalone',
   images: {
-    domains: [],
-    unoptimized: process.env.NODE_ENV === 'development' ? true : false,
+    domains: ['images.unsplash.com'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -12,6 +11,25 @@ const nextConfig = {
     ],
   },
   swcMinify: true,
+  trailingSlash: false,
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+        ],
+      },
+    ];
+  },
 }
 
-module.exports = nextConfig
+if (process.env.NETLIFY) {
+  const netlifyConfig = require('./next.config.netlify.js');
+  module.exports = netlifyConfig;
+} else {
+  module.exports = nextConfig;
+}
