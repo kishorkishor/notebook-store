@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useCartStore } from "@/lib/store/cart-store"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
@@ -9,9 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { formatPrice } from "@/lib/utils"
 import Link from "next/link"
-import { Loader2, ArrowLeft, CreditCard, CheckCircle } from "lucide-react"
-import { motion } from "framer-motion"
-import { useTheme } from "next-themes"
+import { Loader2 } from "lucide-react"
 
 export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -27,44 +25,17 @@ export default function CheckoutPage() {
     expiry: "",
     cvc: ""
   })
-  const [mounted, setMounted] = useState(false)
 
   const router = useRouter()
   const { toast } = useToast()
   const { items, getTotalPrice, clearCart } = useCartStore()
-  const { resolvedTheme } = useTheme()
-  const isDarkTheme = resolvedTheme === 'dark'
   
-  // Set mounted state to true when component mounts in browser
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Only calculate values on the client side
-  const subtotal = mounted ? getTotalPrice() : 0
+  const subtotal = getTotalPrice()
   const shipping = subtotal > 2000 ? 0 : 120
   const total = subtotal + shipping
 
-  // Check if cart is empty only after component is mounted
-  useEffect(() => {
-    if (mounted && items.length === 0) {
-      router.push("/cart")
-    }
-  }, [mounted, items.length, router])
-
-  // If not mounted yet, return a simple loading state
-  if (!mounted) {
-    return (
-      <div className="container py-10">
-        <div className="h-screen flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      </div>
-    )
-  }
-
-  // If cart is empty, don't render the page
   if (items.length === 0) {
+    router.push("/cart")
     return null
   }
 
@@ -77,258 +48,238 @@ export default function CheckoutPage() {
     e.preventDefault()
     setIsLoading(true)
     
-    // Simulate API call
+    // Simulate payment processing
     setTimeout(() => {
       clearCart()
+      setIsLoading(false)
+      
       toast({
         title: "Order placed successfully!",
-        description: "Thank you for your purchase.",
+        description: "Thank you for your purchase. We'll send you an email with your order details.",
       })
+      
       router.push("/checkout/success")
     }, 1500)
   }
 
   return (
     <div className="container py-10">
-      <Link 
-        href="/cart" 
-        className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-6"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back to cart
-      </Link>
+      <h1 className="text-3xl font-bold mb-8">Checkout</h1>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Checkout Form */}
-        <motion.div 
-          className="lg:col-span-2"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-800">
-            <h1 className="text-2xl font-bold mb-6">Checkout</h1>
-            
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-lg font-semibold mb-4 flex items-center">
-                    <span className="bg-blue-600 dark:bg-blue-500 text-white w-6 h-6 rounded-full inline-flex items-center justify-center mr-2">1</span>
-                    Contact Information
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                        className="bg-white/90 dark:bg-slate-800/90"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        className="bg-white/90 dark:bg-slate-800/90"
-                      />
-                    </div>
-                  </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div>
+          <div className="rounded-lg border p-6">
+            <h2 className="text-xl font-semibold mb-6">Shipping Information</h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input 
+                    id="name"
+                    name="name"
+                    placeholder="John Doe"
+                    required
+                    value={formData.name}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input 
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="john.doe@example.com"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="address">Street Address</Label>
+                <Input 
+                  id="address"
+                  name="address"
+                  placeholder="123 Main St"
+                  required
+                  value={formData.address}
+                  onChange={handleChange}
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input 
+                    id="city"
+                    name="city"
+                    placeholder="Dhaka"
+                    required
+                    value={formData.city}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="postalCode">Postal Code</Label>
+                  <Input 
+                    id="postalCode"
+                    name="postalCode"
+                    placeholder="1212"
+                    required
+                    value={formData.postalCode}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input 
+                    id="country"
+                    name="country"
+                    value="Bangladesh"
+                    disabled
+                  />
+                </div>
+              </div>
+              
+              <div className="border-t pt-6 mt-6">
+                <h2 className="text-xl font-semibold mb-6">Payment Information</h2>
+                <div className="space-y-2">
+                  <Label htmlFor="paymentMethod">Payment Method</Label>
+                  <select 
+                    id="paymentMethod" 
+                    name="paymentMethod"
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    required
+                  >
+                    <option value="">Select payment method</option>
+                    <option value="card">Credit/Debit Card</option>
+                    <option value="bkash">bKash</option>
+                    <option value="nagad">Nagad</option>
+                    <option value="bank">Bank Transfer</option>
+                    <option value="cod">Cash on Delivery</option>
+                  </select>
                 </div>
                 
-                <div>
-                  <h2 className="text-lg font-semibold mb-4 flex items-center">
-                    <span className="bg-blue-600 dark:bg-blue-500 text-white w-6 h-6 rounded-full inline-flex items-center justify-center mr-2">2</span>
-                    Shipping Address
-                  </h2>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Address</Label>
-                      <Input
-                        id="address"
-                        name="address"
-                        value={formData.address}
-                        onChange={handleChange}
-                        required
-                        className="bg-white/90 dark:bg-slate-800/90"
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="city">City</Label>
-                        <Input
-                          id="city"
-                          name="city"
-                          value={formData.city}
-                          onChange={handleChange}
-                          required
-                          className="bg-white/90 dark:bg-slate-800/90"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="postalCode">Postal Code</Label>
-                        <Input
-                          id="postalCode"
-                          name="postalCode"
-                          value={formData.postalCode}
-                          onChange={handleChange}
-                          required
-                          className="bg-white/90 dark:bg-slate-800/90"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="country">Country</Label>
-                        <Input
-                          id="country"
-                          name="country"
-                          value={formData.country}
-                          onChange={handleChange}
-                          required
-                          className="bg-white/90 dark:bg-slate-800/90"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="cardName">Name on Card</Label>
+                  <Input 
+                    id="cardName"
+                    name="cardName"
+                    placeholder="John Doe"
+                    required
+                    value={formData.cardName}
+                    onChange={handleChange}
+                  />
                 </div>
                 
-                <div>
-                  <h2 className="text-lg font-semibold mb-4 flex items-center">
-                    <span className="bg-blue-600 dark:bg-blue-500 text-white w-6 h-6 rounded-full inline-flex items-center justify-center mr-2">3</span>
-                    Payment Information
-                  </h2>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="cardName">Name on Card</Label>
-                      <Input
-                        id="cardName"
-                        name="cardName"
-                        value={formData.cardName}
-                        onChange={handleChange}
-                        required
-                        className="bg-white/90 dark:bg-slate-800/90"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cardNumber">Card Number</Label>
-                      <div className="relative">
-                        <Input
-                          id="cardNumber"
-                          name="cardNumber"
-                          value={formData.cardNumber}
-                          onChange={handleChange}
-                          required
-                          placeholder="1234 5678 9012 3456"
-                          className="pl-10 bg-white/90 dark:bg-slate-800/90"
-                        />
-                        <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="expiry">Expiry Date</Label>
-                        <Input
-                          id="expiry"
-                          name="expiry"
-                          value={formData.expiry}
-                          onChange={handleChange}
-                          required
-                          placeholder="MM/YY"
-                          className="bg-white/90 dark:bg-slate-800/90"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="cvc">CVC</Label>
-                        <Input
-                          id="cvc"
-                          name="cvc"
-                          value={formData.cvc}
-                          onChange={handleChange}
-                          required
-                          placeholder="123"
-                          className="bg-white/90 dark:bg-slate-800/90"
-                        />
-                      </div>
-                    </div>
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="cardNumber">Card Number</Label>
+                  <Input 
+                    id="cardNumber"
+                    name="cardNumber"
+                    placeholder="1234 5678 9012 3456"
+                    required
+                    value={formData.cardNumber}
+                    onChange={handleChange}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="expiry">Expiration Date</Label>
+                    <Input 
+                      id="expiry"
+                      name="expiry"
+                      placeholder="MM/YY"
+                      required
+                      value={formData.expiry}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cvc">CVC</Label>
+                    <Input 
+                      id="cvc"
+                      name="cvc"
+                      placeholder="123"
+                      required
+                      value={formData.cvc}
+                      onChange={handleChange}
+                    />
                   </div>
                 </div>
               </div>
               
-              <div className="mt-8">
-                <Button 
-                  type="submit" 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
-                  disabled={isLoading}
-                >
+              <div className="flex items-center justify-between mt-8 pt-4 border-t">
+                <Button type="button" variant="outline" asChild>
+                  <Link href="/cart">Back to Cart</Link>
+                </Button>
+                <Button type="submit" disabled={isLoading}>
                   {isLoading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...
                     </>
                   ) : (
-                    "Complete Order"
+                    <>Place Order</>
                   )}
                 </Button>
               </div>
             </form>
           </div>
-        </motion.div>
+        </div>
         
         {/* Order Summary */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-800 sticky top-20">
-            <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
-            
-            <div className="divide-y divide-gray-200 dark:divide-gray-700">
-              {items.map((item) => (
-                <div key={item.product.id} className="py-3 flex justify-between">
-                  <div className="flex items-center">
-                    <span className="font-medium">{item.product.name}</span>
-                    <span className="text-sm text-muted-foreground ml-2">×{item.quantity}</span>
+        <div>
+          <div className="rounded-lg border overflow-hidden sticky top-24">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+              
+              <div className="space-y-4">
+                {items.map(item => (
+                  <div key={item.product.id} className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium">{item.quantity} × {item.product.name}</span>
+                    </div>
+                    <span>{formatPrice(item.quantity * item.product.price)}</span>
                   </div>
-                  <span>{formatPrice(item.product.price * item.quantity)}</span>
+                ))}
+                
+                <div className="border-t mt-4 pt-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span>{formatPrice(subtotal)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Shipping</span>
+                    <span>{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
+                  </div>
                 </div>
-              ))}
-              
-              <div className="py-3 flex justify-between">
-                <span>Subtotal</span>
-                <span>{formatPrice(subtotal)}</span>
+                
+                <div className="border-t mt-2 pt-2 flex justify-between font-semibold">
+                  <span>Total</span>
+                  <span>{formatPrice(total)}</span>
+                </div>
               </div>
-              
-              <div className="py-3 flex justify-between">
-                <span>Shipping</span>
-                <span>{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
-              </div>
-              
-              <div className="py-3 flex justify-between font-bold">
-                <span>Total</span>
-                <span className="text-lg">{formatPrice(total)}</span>
-              </div>
-            </div>
-            
-            {shipping === 0 && (
-              <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-start">
-                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                <span className="text-sm text-green-800 dark:text-green-400">
-                  You've qualified for free shipping on this order!
-                </span>
-              </div>
-            )}
-            
-            <div className="mt-6 text-sm text-muted-foreground">
-              <p>By placing your order, you agree to our Terms of Service and Privacy Policy.</p>
             </div>
           </div>
-        </motion.div>
+          
+          <div className="mt-6 text-sm text-muted-foreground space-y-4">
+            <p>
+              By placing your order, you agree to our <Link href="/terms" className="underline">Terms and Conditions</Link> and <Link href="/privacy" className="underline">Privacy Policy</Link>.
+            </p>
+            
+            <div className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-shield-check">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+              <p>All transactions are secure and encrypted.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

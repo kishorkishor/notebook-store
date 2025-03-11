@@ -1,5 +1,4 @@
 import { Metadata } from "next"
-import CheckoutBackground from "./background"
 
 export const metadata: Metadata = {
   title: "Checkout | Modern Notebook Store",
@@ -11,10 +10,5 @@ export default function CheckoutLayout({
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <div className="relative min-h-screen">
-      <CheckoutBackground />
-      {children}
-    </div>
-  )
+  return children
 }

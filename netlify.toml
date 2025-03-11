@@ -1,24 +1,11 @@
 [build]
-  command = "next build"
+  command = "npm run netlify-build"
   publish = ".next"
-
-[build.environment]
-  NEXT_USE_NETLIFY_EDGE = "true"
-  NEXT_FORCE_EDGE_IMAGES = "true"
-  NEXT_PUBLIC_BASE_URL = "https://notebook-store.netlify.app"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-[[redirects]]
-  from = "/*"
-  to = "/_ipx"
-  status = 200
-  force = true
-  conditions = {Path = ["/api/auth/**"]}
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  force = false
+[build.environment]
+  NETLIFY_NEXT_PLUGIN_SKIP = "false"
+  NEXT_FORCE_EDGE_IMAGES = "true"
+  NODE_VERSION = "18.17.0"

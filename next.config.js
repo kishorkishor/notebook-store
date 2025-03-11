@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  output: 'export',
   images: {
-    domains: ['images.unsplash.com'],
+    domains: [],
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -11,31 +12,7 @@ const nextConfig = {
     ],
   },
   swcMinify: true,
-  trailingSlash: false,
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*',
-          },
-        ],
-      },
-    ];
-  },
-  reactStrictMode: false,
-  experimental: {
-    optimizeCss: true,
-    workerThreads: true,
-    cpus: 4
-  }
+  distDir: '.next',
 }
 
-if (process.env.NETLIFY) {
-  const netlifyConfig = require('./next.config.netlify.js');
-  module.exports = netlifyConfig;
-} else {
-  module.exports = nextConfig;
-}
+module.exports = nextConfig
