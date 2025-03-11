@@ -5,16 +5,20 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, ShoppingBag } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useId } from "react";
 
 export default function CheckoutSuccessPage() {
   const { resolvedTheme } = useTheme();
   const isDarkTheme = resolvedTheme === 'dark';
   const [mounted, setMounted] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  // Use a stable ID for SSR
+  const stableId = useId();
   
   useEffect(() => {
+    // Only run on client-side
     setMounted(true);
+    // Generate order number only on client-side to avoid hydration mismatch
     setOrderNumber(Math.floor(100000 + Math.random() * 900000).toString());
   }, []);
   
@@ -82,7 +86,7 @@ export default function CheckoutSuccessPage() {
             transition={{ delay: 0.5 }}
           >
             <p className="text-sm">
-              Order Reference: <span className="font-bold">NB-{orderNumber}</span>
+              Order Reference: <span className="font-bold">NB-{orderNumber || `${stableId.replace(/:/g, '')}`}</span>
             </p>
           </motion.div>
           

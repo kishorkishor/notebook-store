@@ -1,7 +1,15 @@
 "use client"
 
 import { useTheme } from "next-themes"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
+
+// Create a deterministic pseudo-random number generator to avoid hydration mismatches
+const createSeededRandom = (seed = 1) => {
+  return () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+};
 
 export default function CheckoutBackground() {
   const { resolvedTheme } = useTheme();
@@ -10,6 +18,20 @@ export default function CheckoutBackground() {
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Generate star data using seeded random for consistent server/client rendering
+  const stars = useMemo(() => {
+    const seededRandom = createSeededRandom(12345);
+    return Array.from({ length: 100 }, () => {
+      const size = seededRandom() * 2 + 1;
+      const animationDuration = seededRandom() * 50 + 50;
+      const left = `${seededRandom() * 100}%`;
+      const top = `${seededRandom() * 100}%`;
+      const animationDelay = `${seededRandom() * 50}s`;
+      
+      return { size, animationDuration, left, top, animationDelay };
+    });
   }, []);
 
   if (!mounted) {
@@ -22,34 +44,26 @@ export default function CheckoutBackground() {
     <div className="absolute inset-0 overflow-hidden z-0">
       {/* Stars container */}
       <div className="stars-container absolute inset-0">
-        {[...Array(100)].map((_, index) => {
-          const size = Math.random() * 2 + 1;
-          const animationDuration = Math.random() * 50 + 50;
-          const left = `${Math.random() * 100}%`;
-          const top = `${Math.random() * 100}%`;
-          const animationDelay = `${Math.random() * 50}s`;
-          
-          return (
-            <div
-              key={index}
-              className={`absolute rounded-full ${
-                isDarkTheme ? 'bg-white' : 'bg-gray-800'
-              }`}
-              style={{
-                width: `${size}px`,
-                height: `${size}px`,
-                left,
-                top,
-                opacity: isDarkTheme ? 0.7 : 0.5,
-                boxShadow: isDarkTheme 
-                  ? `0 0 ${size * 2}px ${size / 2}px rgba(255, 255, 255, 0.3)` 
-                  : `0 0 ${size * 2}px ${size / 2}px rgba(0, 0, 0, 0.1)`,
-                animation: `twinkle ${animationDuration}s infinite linear`,
-                animationDelay,
-              }}
-            />
-          );
-        })}
+        {stars.map((star, index) => (
+          <div
+            key={`star-${index}`}
+            className={`absolute rounded-full ${
+              isDarkTheme ? 'bg-white' : 'bg-gray-800'
+            }`}
+            style={{
+              width: `${star.size}px`,
+              height: `${star.size}px`,
+              left: star.left,
+              top: star.top,
+              opacity: isDarkTheme ? 0.7 : 0.5,
+              boxShadow: isDarkTheme 
+                ? `0 0 ${star.size * 2}px ${star.size / 2}px rgba(255, 255, 255, 0.3)` 
+                : `0 0 ${star.size * 2}px ${star.size / 2}px rgba(0, 0, 0, 0.1)`,
+              animation: `twinkle ${star.animationDuration}s infinite linear`,
+              animationDelay: star.animationDelay,
+            }}
+          />
+        ))}
       </div>
       
       {/* Pulsing gradient orbs */}

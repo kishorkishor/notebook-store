@@ -25,6 +25,12 @@ const nextConfig = {
       },
     ];
   },
+  reactStrictMode: false,
+  experimental: {
+    optimizeCss: true,
+    workerThreads: true,
+    cpus: 4
+  }
 }
 
 if (process.env.NETLIFY) {
